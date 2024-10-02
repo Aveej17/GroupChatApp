@@ -4,14 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>login</title>
+    <link rel="stylesheet" href="../../style/login.css">
 </head>
 <body>
     <form onsubmit="handleFormSubmit(event)">
         <label for="phoneNumber">Enter a phone number OR Email</label>
-        <input id="phoneNumber" name="phone" value="0000000" required>
+        <input id="phoneNumber" name="phone" placeholder="phone or email" required>
         <br><br>
         <label for="password">Enter the password</label>
-        <input id="password" name="password" value="password">
+        <input id="password" name="password" placeholder="password" required>
         <br><br>
         <button type="submit">Login</button>
         <br><br>
