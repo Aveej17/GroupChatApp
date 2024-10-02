@@ -1,7 +1,8 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcrypt');
 const isStringValid = require('../utils/stringValidation');
-const e = require('express');
+const generateToken = require('../utils/generateToken');
+
 
 async function hashPassword(password, saltRounds) {
     try {
@@ -27,7 +28,7 @@ async function compare(userPassword, hashedPassword) {
 exports.createUser = async (req, res, next)=>{
     
     try{
-        console.log(req.body);
+        // console.log(req.body);
         
         const name = req.body.userName;
         const email = req.body.emailId;
@@ -35,7 +36,6 @@ exports.createUser = async (req, res, next)=>{
         const phone = req.body.phone;
 
         if(isStringValid(name) || isStringValid(email) || isStringValid(password) || isStringValid(phone)){
-            console.log("Missing");
             
             return res.status(400).json("Missing parameters to create account");
         }
@@ -69,6 +69,42 @@ exports.createUser = async (req, res, next)=>{
         }
     }
     catch(err){console.log(err)}
+}
+
+exports.loginUser = async (req, res, next)=>{
+    try{
+        // console.log(req.body);
+        const password = req.body.password;
+        const phone = req.body.phone;
+        
+        if(isStringValid(password) || isStringValid(phone)){
+            return res.status(400).json("Missing parameters to create account");
+        }
+        let user = await User.findOne({where:{phone:phone}});
+        let user1 = await User.findOne({where:{email:phone}});
+        // console.log(user);
+        
+
+        if(user==null && user1==null){
+            return res.status(404).json("Invalid Phone Number. User not found");
+        }
+        if(user==null){
+            user = user1;
+        }
+        const passWordCheck = await compare(password, user.password);
+
+        const token = generateToken(user.id)
+
+        if(passWordCheck){
+            return res.status(200).json({message:"User Logged in successfully", data:user, token });   
+            
+        }
+        return res.status(401).json("User not authorized")
+        
+    }
+    catch(err){
+        console.log(err);
+    }
 }
 
 exports.check = (req, res, next)=>{
