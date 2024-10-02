@@ -1,0 +1,38 @@
+const express = require('express');
+
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const sequelize = require('./utils/database');
+require('dotenv').config();
+
+const app = express();
+
+
+app.use(cors());
+
+app.use(express.json());
+app.use(bodyParser.urlencoded({extended: false}));
+
+const userRoutes = require('./routes/userRoutes');
+
+app.use('/users', userRoutes);
+
+// app.use((req, res)=>{
+//     console.log("kls");
+//     res.status(404).json("sorry con't find");
+    
+// })
+
+
+sequelize
+.sync()
+.then(result =>{
+    app.listen(3000);
+    // app.listen(3500);
+})
+.catch(err=>{
+    console.log(err)
+});
+
+
+
