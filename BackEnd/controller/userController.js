@@ -65,7 +65,7 @@ exports.createUser = async (req, res, next)=>{
             })
         }
         else{
-            res.status(403).send("user Already Exists");
+            res.status(409).send("user Already Exists");
         }
     }
     catch(err){console.log(err)}
