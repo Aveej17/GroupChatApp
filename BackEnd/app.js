@@ -16,8 +16,10 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
 const userRoutes = require('./routes/userRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 
 app.use('/users', userRoutes);
+app.use('/chats', chatRoutes);
 
 // app.use((req, res)=>{
 //     console.log("kls");

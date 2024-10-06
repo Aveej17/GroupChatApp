@@ -1,53 +1,53 @@
-const chatWindow = document.getElementById('chatWindow');
-const chatInput = document.getElementById('chatInput');
-const sendButton = document.getElementById('sendButton');
+window.addEventListener("DOMContentLoaded", async () => {
+    try {
+        const token = localStorage.getItem("token");
+        console.log("Token: ", token);
 
-// Replace with WebSocket or real-time messaging in a real-world application
-const socket = new WebSocket('ws://your-backend-server');
+        const response = await axios.get("http://127.0.0.1:3000/chats/getAll", {
+            headers: { Authorization: 'Bearer ' + token }
+        });
 
-// Add event listener to send button
-sendButton.addEventListener('click', sendMessage);
-chatInput.addEventListener('keypress', function(event) {
-    if (event.key === 'Enter') {
-        sendMessage();
+        const chatWindow = document.getElementById("chatWindow");
+
+        if (response.data.success) {
+            const chats = response.data.chat; // Assuming response has an array of chats
+            chats.forEach(chat => {
+                // Create a div for each chat message
+                const chatMessage = document.createElement("div");
+                chatMessage.classList.add("chat-message");
+                chatMessage.textContent = `${chat.name} : ${chat.content}`; // Format username : content
+
+                // Append the message to the chat window
+                chatWindow.appendChild(chatMessage);
+            });
+        }
+    } catch (error) {
+        console.log("Error Loading Chats: " + error);
     }
 });
 
-// Send message to the server
-function sendMessage() {
-    const message = chatInput.value.trim();
-        if (message === '') return;
+sendButton.addEventListener('click', sendMessage);
 
-        // Send message to the server
-        socket.send(JSON.stringify({ user: 'self', message }));
-
-        // Display user message
-        displayMessage(message, 'user');
-            
-        // Clear input field
+async function sendMessage() {
+    try{
+        const chatInput = document.getElementById('chatInput');
+        const token = localStorage.getItem("token");
+        console.log(chatInput.value.trim());
+        const chatDetails = {
+            name:"KL",
+            content: chatInput.value.trim()
+        }
         chatInput.value = '';
-}
-
-// Receive message from server (from the other person)
-socket.onmessage = function(event) {
-    const data = JSON.parse(event.data);
-    if (data.user === 'partner') {
-        displayMessage(data.message, 'partner');
+        const response = await axios.post("http://127.0.0.1:3000/chats/create", {chatDetails},{
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        
+        
     }
-};
-
-// Display message in the chat window
-function displayMessage(message, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', sender);
-
-    const textDiv = document.createElement('div');
-    textDiv.classList.add('text');
-    textDiv.textContent = message;
-
-    messageDiv.appendChild(textDiv);
-    chatWindow.appendChild(messageDiv);
-
-    // Scroll to the bottom of the chat window
-    chatWindow.scrollTop = chatWindow.scrollHeight;
+    catch(err){
+        console.log(err);
+        
+    }
 }
+
+
