@@ -42,7 +42,7 @@ exports.getChat = async (req, res) => {
         const chat = await Chat.findAll({
             attributes: ['name', 'content']
         });
-        console.log(JSON.stringify(chat) + " Chats");
+        // console.log(JSON.stringify(chat) + " Chats");
 
         res.status(200).json({ chat: chat, success: true });
     } catch (err) {
@@ -71,11 +71,11 @@ exports.createChat = async (req, res)=>{
     })
     
     // console.log("Chat Created");
-    res.status(201).JSON({response:response, status:"success"});
+    res.status(201).json({response:response, status:"success"});
     }
     catch(err){
         // console.log(err);
-        res.status(500).JSON({err:err})
+        res.status(500).json({err:err})
         
     }
 }
