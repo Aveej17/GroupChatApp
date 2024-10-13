@@ -1,9 +1,8 @@
 const Chat = require('../models/chatModel');
-const { Op } = require('sequelize'); // Make sure to import Sequelize operators
-
 const isStringValid = require('../utils/stringValidation');
 
 const User = require('../models/userModel');  // Assuming you have a User model
+const { where } = require('sequelize');
 
 exports.getChat = async (req, res) => {
     try {
@@ -41,7 +40,7 @@ exports.getChat = async (req, res) => {
 
         // Fetch and return the chat messages
         const chat = await Chat.findAll({
-            attributes: ['id', 'name', 'content']
+            attributes: ['name', 'content']
         });
         // console.log(JSON.stringify(chat) + " Chats");
 
@@ -51,37 +50,6 @@ exports.getChat = async (req, res) => {
         res.status(500).json({ success: false, message: "Something went wrong" });
     }
 };
-
-exports.getNewChat = async (req, res)=>{
-    try {
-        // Extract the lastId from the query parameters
-        const lastId = req.query.lastId;
-
-        // Fetch new chats with IDs greater than lastId
-        const chat = await Chat.findAll({
-            where: {
-                id: {
-                    [Op.gt]: lastId // Sequelize operator for "greater than"
-                }
-            },
-            attributes: ['id', 'name', 'content'],
-            order: [['id', 'ASC']] // Sort chats by id in ascending order
-        });
-
-        // Send response with the fetched chats
-        res.json({
-            success: true,
-            chat: chat // Send the retrieved chats
-        });
-    } catch (error) {
-        console.error("Error fetching new chats:", error);
-        res.status(500).json({
-            success: false,
-            message: "Error fetching new chats",
-            error: error.message
-        });
-    }
-}
 
 exports.createChat = async (req, res)=>{
 
