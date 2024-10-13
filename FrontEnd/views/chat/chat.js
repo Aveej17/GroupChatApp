@@ -251,24 +251,64 @@ async function loadGroupUsers(groupId) {
         const response = await axios.get(`http://127.0.0.1:3000/groups/${groupId}/users`, {
             headers: { Authorization: 'Bearer ' + token }
         });
-
+    
         const userList = document.getElementById("userList");
         userList.innerHTML = ''; // Clear existing users
-
+    
         response.data.users.forEach(user => {
+            // console.log(user);
+            
             const userItem = document.createElement("div");
-            userItem.textContent = user.name;
             userItem.classList.add("user-item");
+            
+            // Display user name and admin status
+            const userText = document.createElement("span");
+            userText.textContent = user.name + (user.isAdmin ? " (Admin)" : " (Normal User)");
+            userItem.appendChild(userText);
+    
+            // Button to remove user from the group
             const removeButton = document.createElement("button");
             removeButton.textContent = "Remove";
             removeButton.classList.add("remove-user-button");
             removeButton.onclick = () => removeUserFromGroup(user.id, groupId);
             userItem.appendChild(removeButton);
-
+    
+            // Button to promote/demote user
+            const adminToggleButton = document.createElement("button");
+            adminToggleButton.textContent = user.isAdmin ? "Demote to User" : "Promote to Admin";
+            adminToggleButton.classList.add("admin-toggle-button");
+            adminToggleButton.onclick = () => toggleAdminStatus(user.id, groupId, !user.isAdmin);
+            userItem.appendChild(adminToggleButton);
+    
+            // Add user item to the list
             userList.appendChild(userItem);
         });
     } catch (error) {
         console.error("Error loading group users:", error);
+    }    
+}
+
+async function toggleAdminStatus(userId, groupId, newIsAdminStatus) {
+    try {
+        const token = localStorage.getItem("token");
+
+        // API call to promote/demote user
+        const response = await axios.patch(`http://127.0.0.1:3000/groups/${groupId}/users/${userId}/role`, 
+        {
+            isAdmin: newIsAdminStatus // Send new role status
+        }, 
+        {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+
+        // Notify user of success
+        alert(response.data.message);
+
+        // Reload the user list after the change
+        loadGroupUsers(groupId);
+    } catch (error) {
+        console.error("Error changing admin status:", error);
+        alert("Failed to change admin status.");
     }
 }
 

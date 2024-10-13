@@ -128,7 +128,13 @@ exports.getUsers = async (req, res) => {
         });
 
         // Map through userGroups to get only user details
-        const users = userGroups.map(userGroup => userGroup.User);
+        // const users = userGroups.map(userGroup => userGroup.User);
+        // Map through userGroups to get user details along with their isAdmin status
+        const users = userGroups.map(userGroup => ({
+            id: userGroup.User.id,
+            name: userGroup.User.name,
+            isAdmin: userGroup.isAdmin // Include isAdmin status from UserGroup model
+        }));
 
         // console.log(users); // This will log only user details
         return res.status(200).json({ users });
@@ -171,6 +177,41 @@ exports.removeUser = async (req, res) => {
         return res.status(200).json({ success: true, message: 'User removed from the group successfully' });
     } catch (error) {
         console.error("Error removing user from group:", error);
+        return res.status(500).json({ success: false, message: 'Internal server error' });
+    }
+};
+
+
+exports.updateUserRole = async (req, res) => {
+    const groupId = req.params.groupId;
+    const userId = req.params.userId;
+    const { isAdmin } = req.body; // Boolean value to promote (true) or demote (false)
+
+    try {
+        // Ensure that the user making the request is an admin (middleware should handle this)
+
+        // Check if the user exists in the group
+        const userGroup = await UserGroup.findOne({
+            where: {
+                userId: userId,
+                groupId: groupId
+            }
+        });
+
+        if (!userGroup) {
+            return res.status(404).json({ success: false, message: 'User not found in the group' });
+        }
+
+        // Update the user's admin status
+        userGroup.isAdmin = isAdmin;
+        await userGroup.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `User ${isAdmin ? 'promoted to admin' : 'demoted to normal user'} successfully`
+        });
+    } catch (error) {
+        console.error("Error updating user role:", error);
         return res.status(500).json({ success: false, message: 'Internal server error' });
     }
 };
