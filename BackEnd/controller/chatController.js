@@ -3,80 +3,78 @@ const isStringValid = require('../utils/stringValidation');
 
 const User = require('../models/userModel');  // Assuming you have a User model
 const { where } = require('sequelize');
+const { Op } = require('sequelize');
 
 exports.getChat = async (req, res) => {
     try {
-        const { authId } = req.body;
-        let name;
-
-        // Check if user has already joined
-        const existingChat = await Chat.findOne({
-            where: { userId: authId } // Checking if this userId already exists in the Chats table
+        const groupId = req.params.groupId;
+        const messages = await Chat.findAll({
+            where: {
+                groupId, // Match messages for the correct group
+            },
+            include: [{ model: User, attributes: ['name'] }], // Include user details (optional)
+            // order: [['createdAt', 'ASC']] // Order by creation time
         });
 
-        if (existingChat) {
-            // console.log("User has already joined: " + existingChat.name);
-            name = existingChat.name;  // Existing user's name
-        } else {
-            // console.log("New user joining");
+        res.status(200).json({ success: true, messages });
+    } catch (error) {
+        console.error("Error retrieving new messages:", error);
+        res.status(500).json({ success: false, message: "An error occurred while retrieving new messages." });
+    }
+    
+};
+// Assuming you have a method in your controller for this
 
-            // Fetch username from User table if it's a new user
-            const user = await User.findOne({ where: { id: authId } });
+exports.getNewMessages = async (req, res) => {
+    const { lastId, groupId } = req.query; // Extract lastId and groupId from the request query
 
-            if (user) {
-                name = user.name;
-                // console.log("New user name fetched: " + name);
-                const content = "Joined here";
-                // Persist new user and their chat message
-                await Chat.create({
-                    name: name,
-                    userId: authId,
-                    content: content
-                });
-            } else {
-                return res.status(404).json({ success: false, message: "User not found" });
-            }
-        }
-
-        // Fetch and return the chat messages
-        const chat = await Chat.findAll({
-            attributes: ['name', 'content']
+    try {
+        const messages = await Chat.findAll({
+            where: {
+                groupId, // Match messages for the correct group
+                id: { [Op.gt]: lastId } // Fetch messages with an ID greater than lastId
+            },
+            include: [{ model: User, attributes: ['name'] }], // Include user details (optional)
+            // order: [['createdAt', 'ASC']] // Order by creation time
         });
-        // console.log(JSON.stringify(chat) + " Chats");
 
-        res.status(200).json({ chat: chat, success: true });
-    } catch (err) {
-        // console.error("Error: " + err);
-        res.status(500).json({ success: false, message: "Something went wrong" });
+        res.status(200).json({ success: true, messages });
+    } catch (error) {
+        console.error("Error retrieving new messages:", error);
+        res.status(500).json({ success: false, message: "An error occurred while retrieving new messages." });
     }
 };
 
-exports.createChat = async (req, res)=>{
+exports.createChat = async (req, res) => {
+    try {
+        console.log("Create chat gets called");
+        
+        const { authId, chatDetails } = req.body;
+        const { content, groupId } = chatDetails; // Extract groupId and content from request body
 
-    try{
-        const { authId,  } = req.body;
-        const content = req.body.chatDetails.content;
-
-        let name;
-        const user = await User.findOne({ where: { id: authId } });
-        // console.log(req.body);
-
+        // console.log(authId);
         // console.log(content);
+        // console.log(groupId);
         
-        name = user.name;
-        let response = await Chat.create({
-            name: name,
-            userId: authId,
-            content: content
-    })
-    
-    // console.log("Chat Created");
-    res.status(201).json({response:response, status:"success"});
-    }
-    catch(err){
-        // console.log(err);
-        res.status(500).json({err:err})
         
-    }
-}
+        
+        // Fetch the user based on the authId (to get the user's name)
+        const user = await User.findOne({ where: { id: authId } });
+        if (!user) {
+            return res.status(404).json({ success: false, message: "User not found" });
+        }
 
+        // Create a new chat message associated with the user and group
+        const newChat = await Chat.create({
+            content: content,
+            userId: authId,
+            groupId: groupId // Associate the chat message with the specific group
+        });
+
+        // Send a success response with the created chat message
+        res.status(201).json({ success: true, message: "Chat created", chat: newChat });
+    } catch (err) {
+        console.error("Error creating chat:", err);
+        res.status(500).json({ success: false, message: "An error occurred while creating the chat", error: err });
+    }
+};

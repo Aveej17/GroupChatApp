@@ -15,7 +15,8 @@ async function handleFormSubmit(event){
 
         localStorage.setItem("token", response.data.token);
         alert("user logged in successfully");
-        window.location.href = "../chat/chat.html";
+        window.location.href = "../group/groupHome.html";
+        // window.location.href = "../chat/chat.html";
 
     }
     catch(err){
