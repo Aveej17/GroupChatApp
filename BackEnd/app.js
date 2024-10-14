@@ -1,3 +1,5 @@
+const path = require('path');
+
 const express = require('express');
 
 const bodyParser = require('body-parser');
@@ -14,8 +16,10 @@ const app = express();
 
 
 app.use(cors(
-    origin="http://127.0.0.1:5500",
+    origin="http://127.0.0.1:4000",
 ));
+
+
 
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended: false}));
@@ -28,21 +32,27 @@ app.use('/users', userRoutes);
 app.use('/chats', chatRoutes);
 app.use('/groups', groupRoutes);
 
+
+app.use((req, res)=>{  
+        res.sendFile(path.join(__dirname, `public/views/${req.url}`));
+})
+
 User.belongsToMany(Group, { through: userGroup, foreignKey: 'userId' });
 Group.belongsToMany(User, { through: userGroup, foreignKey: 'groupId' });
 
 
-app.use((req, res)=>{
-    console.log("sorry can't find");
-    res.status(404).json("sorry can't find");
+
+// app.use((req, res)=>{
+//     console.log("sorry can't find");
+//     res.status(404).json("sorry can't find");
     
-})
+// })
 
 
 sequelize
 .sync()
 .then(result =>{
-    app.listen(3000);
+    app.listen(process.env.PORT);
     // app.listen(3500);
 })
 .catch(err=>{
