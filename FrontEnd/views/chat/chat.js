@@ -1,41 +1,218 @@
+// document.addEventListener("DOMContentLoaded", async () => {
+//     const params = new URLSearchParams(window.location.search);
+//     const groupId = params.get("groupId"); // Get the groupId from the query parameters
+//     console.log(groupId);
+
+//     if (groupId) {
+//         await loadGroupDetails(groupId);
+//         loadGroupMessages(groupId);
+//     } else {
+//         console.error("No groupId provided");
+//     }
+
+//     const chatInput = document.getElementById("chatInput");
+//     const sendButton = document.getElementById("sendButton");
+
+//     chatInput.addEventListener('keypress', function (event) {
+//         if (event.key === 'Enter') {
+//             event.preventDefault();
+//             sendMessage();
+//         }
+//     });
+
+//     sendButton.addEventListener('click', function () {
+//         sendMessage();
+//     });
+
+//     document.getElementById("backButton").addEventListener("click", () => {
+//         window.history.back();
+//     });
+
+//     await loadGroupUsers(groupId);
+
+//     // Initialize WebSocket connection
+//     const socket = new WebSocket('ws://127.0.0.1:3000'); // Change port if necessary
+
+//     socket.onmessage = (event) => {
+//         const msg = JSON.parse(event.data);
+//         if (msg.type === 'chat') {
+//             // Append new message to chat window
+//             const chatWindow = document.getElementById("chatWindow");
+//             const chatMessage = document.createElement("div");
+//             chatMessage.classList.add("chat-message");
+//             chatMessage.textContent = `${msg.userName}: ${msg.content}`; // Assuming msg has userName and content
+//             chatWindow.appendChild(chatMessage);
+//         }
+//     };
+// });
+
+
+
+// document.addEventListener("DOMContentLoaded", async () => {
+//     const params = new URLSearchParams(window.location.search);
+//     const groupId = params.get("groupId"); // Get the groupId from the query parameters
+//     console.log(groupId);
+    
+//     if (groupId) {
+//         // Fetch the group details to get the group name
+//         await loadGroupDetails(groupId);
+//         // Optionally, you can call a function to load messages for the group
+//         // setInterval(()=>{
+//         //     loadGroupMessages(groupId), 10000000
+//         // })
+//         loadGroupMessages(groupId);
+        
+//     } else {
+//         console.error("No groupId provided");
+//     }
+//     const chatInput = document.getElementById("chatInput");
+//     const sendButton = document.getElementById("sendButton");
+
+//     chatInput.addEventListener('keypress', function(event) {
+//         if (event.key === 'Enter') {
+//             event.preventDefault(); // Prevent the default action (like form submission)
+//             sendMessage(); // Call the sendMessage function
+//         }
+//     });
+
+//     sendButton.addEventListener('click', function() {
+//         sendMessage(); // Call the sendMessage function when the button is clicked
+//     });
+
+//     document.getElementById("backButton").addEventListener("click", () => {
+//         window.history.back(); // Navigate to the previous page
+//     });
+//     await loadGroupUsers(groupId);
+// });
+
+// Function to load group details
+
+
+// let socket; // Declare socket variable
+
+// document.addEventListener("DOMContentLoaded", async () => {
+//     const params = new URLSearchParams(window.location.search);
+//     const groupId = params.get("groupId"); // Get the groupId from the query parameters
+
+//     if (groupId) {
+//         await loadGroupDetails(groupId);
+//         await loadGroupMessages(groupId);
+//     } else {
+//         console.error("No groupId provided");
+//     }
+
+//     const chatInput = document.getElementById("chatInput");
+//     const sendButton = document.getElementById("sendButton");
+
+//     chatInput.addEventListener('keypress', function (event) {
+//         if (event.key === 'Enter') {
+//             event.preventDefault();
+//             sendMessage();
+//         }
+//     });
+
+//     sendButton.addEventListener('click', function () {
+//         sendMessage();
+//     });
+
+//     document.getElementById("backButton").addEventListener("click", () => {
+//         window.history.back();
+//     });
+
+//     await loadGroupUsers(groupId);
+
+//     // Initialize WebSocket connection
+//     socket = new WebSocket('ws://127.0.0.1:3000'); // Change port if necessary
+
+//     socket.onopen = () => {
+//         console.log("WebSocket connection established");
+//     };
+
+//     socket.onmessage = (event) => {
+//         const msg = JSON.parse(event.data);
+//         if (msg.type === 'chat') {
+//             // Append new message to chat window
+//             const chatWindow = document.getElementById("chatWindow");
+//             const chatMessage = document.createElement("div");
+//             chatMessage.classList.add("chat-message");
+//             chatMessage.textContent = `${msg.userName}: ${msg.content}`; // Assuming msg has userName and content
+//             chatWindow.appendChild(chatMessage);
+//             chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll to the bottom
+//         }
+//     };
+
+//     socket.onerror = (error) => {
+//         console.error("WebSocket error:", error);
+//     };
+
+//     socket.onclose = () => {
+//         console.log("WebSocket connection closed");
+//     };
+// });
+
+
+let socket; // Declare socket variable
+
 document.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
     const groupId = params.get("groupId"); // Get the groupId from the query parameters
-    console.log(groupId);
-    
+
     if (groupId) {
-        // Fetch the group details to get the group name
         await loadGroupDetails(groupId);
-        // Optionally, you can call a function to load messages for the group
-        // setInterval(()=>{
-        //     loadGroupMessages(groupId), 10000000
-        // })
-        loadGroupMessages(groupId);
-        
+        await loadGroupMessages(groupId);
     } else {
         console.error("No groupId provided");
     }
-    const chatInput = document.getElementById("chatInput");
-    const sendButton = document.getElementById("sendButton");
 
-    chatInput.addEventListener('keypress', function(event) {
-        if (event.key === 'Enter') {
-            event.preventDefault(); // Prevent the default action (like form submission)
-            sendMessage(); // Call the sendMessage function
+    // Initialize WebSocket connection
+    socket = new WebSocket('ws://127.0.0.1:3000'); // Change port if necessary
+
+    socket.onopen = () => {
+        console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'chat') {
+            // Append new message to chat window
+            const chatWindow = document.getElementById("chatWindow");
+            const chatMessage = document.createElement("div");
+            chatMessage.classList.add("chat-message");
+            chatMessage.textContent = `${msg.userName}: ${msg.content}`; // Assuming msg has userName and content
+            chatWindow.appendChild(chatMessage);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll to the bottom
         }
-    });
+    };
 
-    sendButton.addEventListener('click', function() {
-        sendMessage(); // Call the sendMessage function when the button is clicked
-    });
+    socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+    };
 
-    document.getElementById("backButton").addEventListener("click", () => {
-        window.history.back(); // Navigate to the previous page
-    });
-    await loadGroupUsers(groupId);
+    socket.onclose = () => {
+        console.log("WebSocket connection closed");
+    };
 });
 
-// Function to load group details
+async function sendMessage() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const groupId = params.get("groupId");
+        const messageContent = document.getElementById('chatInput').value;
+
+        const chatDetails = {
+            content: messageContent,
+            groupId: groupId,
+        };
+
+        // Send the message to the WebSocket server
+        socket.send(JSON.stringify(chatDetails));
+
+        document.getElementById('chatInput').value = ''; // Clear input after sending
+    } catch (error) {
+        console.error("Error sending message:", error);
+    }
+}
+
 async function loadGroupDetails(groupId) {
     try {
         const token = localStorage.getItem("token");
@@ -175,44 +352,67 @@ async function loadGroupMessages(groupId) {
 //     }
 // });
 
-async function sendMessage() {
-    try {
-        const token = localStorage.getItem("token");
+// async function sendMessage() {
+//     try {
+//         const token = localStorage.getItem("token");
+//         const params = new URLSearchParams(window.location.search);
+//         const groupId = params.get("groupId");
 
-        const params = new URLSearchParams(window.location.search);
-        const groupId = params.get("groupId");
+//         const messageContent = document.getElementById('chatInput').value;
+//         const chatDetails = {
+//             content: messageContent,
+//             groupId: groupId,
+//             // userName: "Your User Name", // Replace with actual user name
+//             // type: 'chat' // Message type
+//         };
 
-        const messageContent = document.getElementById('chatInput').value;
-        const chatDetails = {
-            content: messageContent,
-            groupId: groupId
-        };
+//         // Send the message to the WebSocket server
+//         socket.send(JSON.stringify(chatDetails));
 
-        const response = await axios.post('http://127.0.0.1:3000/chats/create', {
-            chatDetails: chatDetails
-        }, {
-            headers: { Authorization: 'Bearer ' + token }
-        });
+//         document.getElementById('chatInput').value = ''; // Clear input after sending
+//     } catch (error) {
+//         console.error("Error sending message:", error);
+//     }
+// }
 
-        if (response.data.success) {
-            // console.log("Message sent:", response.data.chat);
+// async function sendMessage() {
+//     try {
+//         const token = localStorage.getItem("token");
 
-            // we can reload also
+//         const params = new URLSearchParams(window.location.search);
+//         const groupId = params.get("groupId");
 
-            await loadGroupMessages(groupId);
+//         const messageContent = document.getElementById('chatInput').value;
+//         const chatDetails = {
+//             content: messageContent,
+//             groupId: groupId
+//         };
 
-            // Optionally update the chat window with the new message
-            // const chatWindow = document.getElementById("chatWindow");
-            // const chatMessage = document.createElement("div");
-            // chatMessage.classList.add("chat-message");
-            // chatMessage.textContent = `${response.data.chat.User.name} : ${response.data.chat.content}`; // Format username : content
-            // chatWindow.appendChild(chatMessage);
+//         const response = await axios.post('http://127.0.0.1:3000/chats/create', {
+//             chatDetails: chatDetails
+//         }, {
+//             headers: { Authorization: 'Bearer ' + token }
+//         });
 
-        }
-    } catch (error) {
-        console.error("Error sending message:", error);
-    }
-}
+//         if (response.data.success) {
+//             // console.log("Message sent:", response.data.chat);
+
+//             // we can reload also
+
+//             await loadGroupMessages(groupId);
+
+//             // Optionally update the chat window with the new message
+//             // const chatWindow = document.getElementById("chatWindow");
+//             // const chatMessage = document.createElement("div");
+//             // chatMessage.classList.add("chat-message");
+//             // chatMessage.textContent = `${response.data.chat.User.name} : ${response.data.chat.content}`; // Format username : content
+//             // chatWindow.appendChild(chatMessage);
+
+//         }
+//     } catch (error) {
+//         console.error("Error sending message:", error);
+//     }
+// }
 
 // async function loadGroupUsers(groupId) {
 //     try {
@@ -350,6 +550,7 @@ document.getElementById("addUserButton").addEventListener("click", async () => {
             document.getElementById("newUserEmail").value = ""; // Clear input field
         }
     } catch (error) {
+        alert("UserNotFound");
         console.error("Error adding user:", error);
     }
 });

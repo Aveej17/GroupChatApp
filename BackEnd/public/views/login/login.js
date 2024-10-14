@@ -12,7 +12,9 @@ async function handleFormSubmit(event){
         
         let response = await axios.post("http://127.0.0.1:3000/users/login", UserDetails);
         // console.log(response.data.token);
-
+        localStorage.setItem('name', response.data.data.name);
+        // console.log(response.data.data.name);
+        
         localStorage.setItem("token", response.data.token);
         alert("user logged in successfully");
         window.location.href = "../group/groupHome.html";

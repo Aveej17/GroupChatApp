@@ -1,41 +1,87 @@
+let socket; // Declare socket variable
+
 document.addEventListener("DOMContentLoaded", async () => {
     const params = new URLSearchParams(window.location.search);
     const groupId = params.get("groupId"); // Get the groupId from the query parameters
-    console.log(groupId);
-    
-    
-    
+
     if (groupId) {
-        // Fetch the group details to get the group name
         await loadGroupDetails(groupId);
-        // Optionally, you can call a function to load messages for the group
-        // setInterval(()=>{
-        //     loadGroupMessages(groupId), 10000000
-        // })
-        loadGroupMessages(groupId);
-        
+        await loadGroupMessages(groupId);
     } else {
         console.error("No groupId provided");
     }
+
     const chatInput = document.getElementById("chatInput");
     const sendButton = document.getElementById("sendButton");
 
-    chatInput.addEventListener('keypress', function(event) {
+    chatInput.addEventListener('keypress', function (event) {
         if (event.key === 'Enter') {
-            event.preventDefault(); // Prevent the default action (like form submission)
-            sendMessage(); // Call the sendMessage function
+            event.preventDefault();
+            sendMessage();
         }
     });
 
-    sendButton.addEventListener('click', function() {
-        sendMessage(); // Call the sendMessage function when the button is clicked
+    sendButton.addEventListener('click', function () {
+        sendMessage();
     });
 
     document.getElementById("backButton").addEventListener("click", () => {
-        window.history.back(); // Navigate to the previous page
+        window.history.back();
     });
+
     await loadGroupUsers(groupId);
+
+    // Initialize WebSocket connection
+    socket = new WebSocket('ws://127.0.0.1:3000'); // Change port if necessary
+
+    socket.onopen = () => {
+        console.log("WebSocket connection established");
+    };
+
+    socket.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'chat') {
+            // Append new message to chat window
+            const chatWindow = document.getElementById("chatWindow");
+            const chatMessage = document.createElement("div");
+            chatMessage.classList.add("chat-message");
+            chatMessage.textContent = `${msg.userName}: ${msg.content}`; // Assuming msg has userName and content
+            chatWindow.appendChild(chatMessage);
+            chatWindow.scrollTop = chatWindow.scrollHeight; // Auto-scroll to the bottom
+        }
+    };
+
+    socket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+    };
+
+    socket.onclose = () => {
+        console.log("WebSocket connection closed");
+    };
 });
+
+async function sendMessage() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const groupId = params.get("groupId");
+        const messageContent = document.getElementById('chatInput').value;
+        const userName = localStorage.getItem("name");
+        const chatDetails = {
+            content: messageContent,
+            groupId: groupId,
+            userName: userName, // Replace with actual user name
+            type: 'chat' // Message type
+        };
+
+        // Send the message to the WebSocket server
+        socket.send(JSON.stringify(chatDetails));
+
+        document.getElementById('chatInput').value = ''; // Clear input after sending
+    } catch (error) {
+        console.error("Error sending message:", error);
+    }
+}
+
 
 // Function to load group details
 async function loadGroupDetails(groupId) {
@@ -119,134 +165,6 @@ async function loadGroupMessages(groupId) {
         console.log("Error Loading Group Messages: " + error);
     }
 }
-
-
-
-// window.addEventListener("DOMContentLoaded", async () => {
-//     getmessages();   
-//     setInterval(async () => {
-//         // Clear existing messages (this depends on how you're storing them)
-//         clearMessages();
-        
-//         // Fetch and display messages
-//         await getmessages();
-//     }, 5000); 
-// });
-
-// function clearMessages() {
-//     // Assuming you have a container where messages are displayed
-//     const messageContainer = document.getElementById('chatWindow'); // Replace with your actual container ID
-//     if (messageContainer) {
-//         messageContainer.innerHTML = ''; // Clear existing messages
-//     }
-// }
-
-
-// async function getmessages(){
-//     try {
-//         const token = localStorage.getItem("token");
-//         // console.log("Token: ", token);
-
-//         const response = await axios.get("http://127.0.0.1:3000/chats/getAll", {
-//             headers: { Authorization: 'Bearer ' + token }
-//         });
-
-//         const chatWindow = document.getElementById("chatWindow");
-
-//         if (response.data.success) {
-//             const chats = response.data.chat; // Assuming response has an array of chats
-//             chats.forEach(chat => {
-//                 // Create a div for each chat message
-//                 const chatMessage = document.createElement("div");
-//                 chatMessage.classList.add("chat-message");
-//                 chatMessage.textContent = `${chat.name} : ${chat.content}`; // Format username : content
-
-//                 // Append the message to the chat window
-//                 chatWindow.appendChild(chatMessage);
-//             });
-//         }
-//     } catch (error) {
-//         console.log("Error Loading Chats: " + error);
-//     }
-// }
-
-// sendButton.addEventListener('click', sendMessage);
-// chatInput.addEventListener('keypress', function(event) {
-//     if (event.key === 'Enter') {
-//         sendMessage();
-//     }
-// });
-
-async function sendMessage() {
-    try {
-        const token = localStorage.getItem("token");
-
-        const params = new URLSearchParams(window.location.search);
-        const groupId = params.get("groupId");
-        
-
-        const messageContent = document.getElementById('chatInput').value;
-        const chatDetails = {
-            content: messageContent,
-            groupId: groupId
-        };
-
-        const response = await axios.post('http://127.0.0.1:3000/chats/create', {
-            chatDetails: chatDetails
-        }, {
-            headers: { Authorization: 'Bearer ' + token }
-        });
-
-        if (response.data.success) {
-            // console.log("Message sent:", response.data.chat);
-
-            // we can reload also
-
-            await loadGroupMessages(groupId);
-
-            // Optionally update the chat window with the new message
-            // const chatWindow = document.getElementById("chatWindow");
-            // const chatMessage = document.createElement("div");
-            // chatMessage.classList.add("chat-message");
-            // chatMessage.textContent = `${response.data.chat.User.name} : ${response.data.chat.content}`; // Format username : content
-            // chatWindow.appendChild(chatMessage);
-
-        }
-    } catch (error) {
-        console.error("Error sending message:", error);
-    }
-}
-
-// async function loadGroupUsers(groupId) {
-//     try {
-//         const token = localStorage.getItem("token");
-//         const response = await axios.get(`http://127.0.0.1:3000/groups/${groupId}/users`, {
-//             headers: { Authorization: 'Bearer ' + token }
-//         });
-
-//         const userList = document.getElementById("userList");
-//         userList.innerHTML = ''; // Clear existing users
-
-//         response.data.users.forEach(user => {
-//             const userItem = document.createElement("div");
-//             userItem.textContent = user.name; // Assuming user object has a 'name' property
-//             userItem.classList.add("user-item");
-
-//             // Add remove button for admin users
-//             if (user.isAdmin) { // Assuming the user object has an 'isAdmin' property
-//                 const removeButton = document.createElement("button");
-//                 removeButton.textContent = "Remove";
-//                 removeButton.classList.add("remove-user-button");
-//                 removeButton.onclick = () => removeUserFromGroup(user.id, groupId); // Assuming user object has an 'id' property
-//                 userItem.appendChild(removeButton);
-//             }
-
-//             userList.appendChild(userItem);
-//         });
-//     } catch (error) {
-//         console.error("Error loading group users:", error);
-//     }
-// }
 
 async function loadGroupUsers(groupId) {
     try {
@@ -351,13 +269,137 @@ document.getElementById("addUserButton").addEventListener("click", async () => {
             document.getElementById("newUserEmail").value = ""; // Clear input field
         }
     } catch (error) {
+        document.getElementById("newUserEmail").value = ""; 
+        alert("unable to add user")
         console.error("Error adding user:", error);
     }
 });
 
 
 
+// window.addEventListener("DOMContentLoaded", async () => {
+//     getmessages();   
+//     setInterval(async () => {
+//         // Clear existing messages (this depends on how you're storing them)
+//         clearMessages();
+        
+//         // Fetch and display messages
+//         await getmessages();
+//     }, 5000); 
+// });
+
+// function clearMessages() {
+//     // Assuming you have a container where messages are displayed
+//     const messageContainer = document.getElementById('chatWindow'); // Replace with your actual container ID
+//     if (messageContainer) {
+//         messageContainer.innerHTML = ''; // Clear existing messages
+//     }
+// }
 
 
+// async function getmessages(){
+//     try {
+//         const token = localStorage.getItem("token");
+//         // console.log("Token: ", token);
 
+//         const response = await axios.get("http://127.0.0.1:3000/chats/getAll", {
+//             headers: { Authorization: 'Bearer ' + token }
+//         });
+
+//         const chatWindow = document.getElementById("chatWindow");
+
+//         if (response.data.success) {
+//             const chats = response.data.chat; // Assuming response has an array of chats
+//             chats.forEach(chat => {
+//                 // Create a div for each chat message
+//                 const chatMessage = document.createElement("div");
+//                 chatMessage.classList.add("chat-message");
+//                 chatMessage.textContent = `${chat.name} : ${chat.content}`; // Format username : content
+
+//                 // Append the message to the chat window
+//                 chatWindow.appendChild(chatMessage);
+//             });
+//         }
+//     } catch (error) {
+//         console.log("Error Loading Chats: " + error);
+//     }
+// }
+
+// sendButton.addEventListener('click', sendMessage);
+// chatInput.addEventListener('keypress', function(event) {
+//     if (event.key === 'Enter') {
+//         sendMessage();
+//     }
+// });
+
+// async function sendMessage() {
+//     try {
+//         const token = localStorage.getItem("token");
+
+//         const params = new URLSearchParams(window.location.search);
+//         const groupId = params.get("groupId");
+        
+
+//         const messageContent = document.getElementById('chatInput').value;
+//         const chatDetails = {
+//             content: messageContent,
+//             groupId: groupId
+//         };
+
+//         const response = await axios.post('http://127.0.0.1:3000/chats/create', {
+//             chatDetails: chatDetails
+//         }, {
+//             headers: { Authorization: 'Bearer ' + token }
+//         });
+
+//         if (response.data.success) {
+//             // console.log("Message sent:", response.data.chat);
+
+//             // we can reload also
+
+//             await loadGroupMessages(groupId);
+
+//             // Optionally update the chat window with the new message
+//             // const chatWindow = document.getElementById("chatWindow");
+//             // const chatMessage = document.createElement("div");
+//             // chatMessage.classList.add("chat-message");
+//             // chatMessage.textContent = `${response.data.chat.User.name} : ${response.data.chat.content}`; // Format username : content
+//             // chatWindow.appendChild(chatMessage);
+
+//         }
+//     } catch (error) {
+//         console.error("Error sending message:", error);
+//     }
+// }
+
+// async function loadGroupUsers(groupId) {
+//     try {
+//         const token = localStorage.getItem("token");
+//         const response = await axios.get(`http://127.0.0.1:3000/groups/${groupId}/users`, {
+//             headers: { Authorization: 'Bearer ' + token }
+//         });
+
+//         const userList = document.getElementById("userList");
+//         userList.innerHTML = ''; // Clear existing users
+
+//         response.data.users.forEach(user => {
+//             const userItem = document.createElement("div");
+//             userItem.textContent = user.name; // Assuming user object has a 'name' property
+//             userItem.classList.add("user-item");
+
+//             // Add remove button for admin users
+//             if (user.isAdmin) { // Assuming the user object has an 'isAdmin' property
+//                 const removeButton = document.createElement("button");
+//                 removeButton.textContent = "Remove";
+//                 removeButton.classList.add("remove-user-button");
+//                 removeButton.onclick = () => removeUserFromGroup(user.id, groupId); // Assuming user object has an 'id' property
+//                 userItem.appendChild(removeButton);
+//             }
+
+//             userList.appendChild(userItem);
+//         });
+//     } catch (error) {
+//         console.error("Error loading group users:", error);
+//     }
+// }
 
