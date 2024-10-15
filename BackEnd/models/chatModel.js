@@ -23,7 +23,11 @@ const Chat = sequelize.define('Message', {
             model: Group,
             key: 'id'
         }
-    }
+    },
+    type: {
+        type: DataTypes.ENUM('text', 'file'),
+        allowNull: false,
+    },
 });
 
 // User.hasMany(Chat);

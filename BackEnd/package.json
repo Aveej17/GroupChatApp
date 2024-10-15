@@ -20,6 +20,7 @@
     "sequelize": "^6.37.3"
   },
   "dependencies": {
+    "aws-sdk": "^2.1691.0",
     "nodemon": "^3.1.7",
     "ws": "^8.18.0"
   }
